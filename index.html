@@ -985,18 +985,18 @@
                 referrer: document.referrer
             };
             
-            // Track conversion
-            trackEvent('bilan_competences_lead_generated', {
-                value: 12, // Valeur de 12€ comme configuré
-                currency: 'EUR',
-                transaction_id: Date.now().toString()
+            // Track Google Ads conversion (Format officiel)
+            gtag('event', 'conversion', {
+                'send_to': 'AW-17340136465',
+                'value': 12,
+                'currency': 'EUR'
             });
             
-            // Track Google Ads conversion
-            gtag('event', 'conversion', {
-                send_to: 'AW-17340136465',
-                value: 12,
-                currency: 'EUR'
+            // Track event pour analytics
+            trackEvent('form_submitted_success', {
+                conversion_value: 12,
+                currency: 'EUR',
+                transaction_id: Date.now().toString()
             });
             
             console.log('✅ Form data collected:', finalData);
