@@ -1000,9 +1000,22 @@
             });
             
             console.log('✅ Form data collected:', finalData);
+            // Envoi des données vers FormSubmit
+try {
+    const response = await fetch('https://formsubmit.co/gerardeura@yahoo.fr', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(finalData)
+    });
+    
+    console.log('✅ Lead envoyé avec succès vers FormSubmit:', finalData);
+} catch (error) {
+    console.error('❌ Erreur lors de l\'envoi:', error);
+    // Même si l'envoi échoue, on continue l'expérience utilisateur
+}
             
-            // Here you would send the data to your server
-            // Example: await fetch('/api/submit', { method: 'POST', body: JSON.stringify(finalData) });
             
             // Show success message
             setTimeout(() => {
