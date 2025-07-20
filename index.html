@@ -535,51 +535,23 @@
             
             // Send data to FormSubmit - VOUS
             try {
-                const response1 = await fetch('https://formsubmit.co/gerardeura@yahoo.fr', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(finalData)
-                });
-                
-                console.log('✅ Lead envoyé avec succès vers FormSubmit (Vous):', finalData);
-            } catch (error) {
-                console.error('❌ Erreur lors de l\'envoi (Vous):', error);
-            }
+            // Send data to FormSubmit
+try {
+    const response = await fetch('https://formsubmit.co/gerardeura@yahoo.fr', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(finalData)
+    });
+    
+    console.log('✅ Lead envoyé avec succès vers FormSubmit:', finalData);
+} catch (error) {
+    console.error('❌ Erreur lors de l\'envoi:', error);
+}
 
-            // Send data to FormSubmit - COMMERCIAL (AUTOMATIQUE)
-            try {
-                const response2 = await fetch('https://formsubmit.co/kaplandahan@gmail.com', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        ...finalData,
-                        subject: `🔥 NOUVEAU LEAD CPF - Score ${finalData.score}/10`,
-                        message: `
-📊 NOUVEAU PROSPECT CPF :
 
-👤 CONTACT :
-- Nom : ${finalData.firstName} ${finalData.lastName}
-- Email : ${finalData.email}
-- Téléphone : ${finalData.phone}
 
-🎯 QUALIFICATION :
-- Score éligibilité : ${finalData.score}/10
-- Statut : ${finalData.status === '3' ? 'Salarié/Fonctionnaire' : finalData.status === '2' ? 'Indépendant/Demandeur' : 'Étudiant'}
-- Expérience : ${finalData.experience === '3' ? '+5 ans' : finalData.experience === '2' ? '+3 ans' : '0-3 ans'}
-- Motivation : ${finalData.motivation === '3' ? 'Reconversion/Évolution' : finalData.motivation === '2' ? 'Bilan/Formation' : 'Curiosité'}
-
-⏰ PRIORITÉ : ${finalData.score >= 7 ? '🔥 URGENT - Appel immédiat' : finalData.score >= 5 ? '🟡 Standard - Appel 48h' : '🔵 Tiède - Qualification'}
-
-📈 PERFORMANCE CAMPAGNE : 50% conversion, 2,27€ par lead
-
-Action recommandée : Appel dans les 24h
-                        `
-                    })
-                });
                 
                 console.log('✅ Lead envoyé avec succès vers Commercial:', finalData);
             } catch (error) {
