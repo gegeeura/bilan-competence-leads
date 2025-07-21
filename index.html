@@ -457,9 +457,25 @@
         // ⚠️ IMPORTANT: Remplacez cette valeur par votre vraie clé Web3Forms
         const WEB3FORMS_ACCESS_KEY = '74e941d4-00d4-4eab-8644-9aff8bc93cb9';
         
-        // Variables globales
-        let formData = {};
-        let startTime = Date.now();
+   // Fonction simple pour lire l'URL
+function getCampaignFromURL() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const campaign = urlParams.get('utm_campaign') || 'Non identifiée';
+    const source = urlParams.get('utm_source') || '';
+    const medium = urlParams.get('utm_medium') || '';
+    
+    // Identifier la campagne
+    if (campaign.includes('pmax')) return 'Performance Max';
+    if (campaign.includes('search_cpf_2')) return 'Campagne 2 Search';
+    if (campaign.includes('search_cpf_3')) return 'Campagne 3 Search';
+    
+    return campaign;
+}
+
+// Capturer dès le chargement
+const campaignName = getCampaignFromURL();
+// Capturer dès le chargement
+const campaignName = getCampaignFromURL();
         let isSubmitting = false;
         
         // Timer de 30 secondes
@@ -575,13 +591,18 @@
                     },
                     body: JSON.stringify({
                         access_key: WEB3FORMS_ACCESS_KEY,
-                        subject: `🎯 Nouveau Lead CPF - Score: ${score}/10`,
+                       subject: `🎯 Lead CPF - ${campaignName} - Score: ${score}/10`,
                         
                         // Informations principales
-                        prenom: formData.firstName,
-                        nom: formData.lastName,
-                        email: formData.email,
-                        telephone: formData.phone,
+                 // Informations principales
+prenom: formData.firstName,
+nom: formData.lastName,
+email: formData.email,
+telephone: formData.phone,
+campagne_source: campaignName,
+url_complete: window.location.href,
+
+// Réponses au questionnaire
                         
                         // Réponses au questionnaire
                         statut_professionnel: formData.status === '3' ? 'Salarié/Fonctionnaire' : 
