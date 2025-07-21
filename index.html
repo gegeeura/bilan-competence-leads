@@ -458,6 +458,10 @@
         const WEB3FORMS_ACCESS_KEY = '74e941d4-00d4-4eab-8644-9aff8bc93cb9';
         
    // Fonction simple pour lire l'URL
+        // Variables globales
+let formData = {};
+let startTime = Date.now();
+let isSubmitting = false;
 function getCampaignFromURL() {
     const urlParams = new URLSearchParams(window.location.search);
     const campaign = urlParams.get('utm_campaign') || 'Non identifiée';
@@ -475,7 +479,7 @@ function getCampaignFromURL() {
 // Capturer dès le chargement
 const campaignName = getCampaignFromURL();
 
-        let isSubmitting = false;
+      
         
         // Timer de 30 secondes
         let timeLeft = 30;
