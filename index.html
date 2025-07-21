@@ -454,6 +454,9 @@
     </div>
 
     <script>
+        // ⚠️ IMPORTANT: Remplacez cette valeur par votre vraie clé Web3Forms
+        const WEB3FORMS_ACCESS_KEY = '74e941d4-00d4-4eab-8644-9aff8bc93cb9';
+        
         // Variables globales
         let formData = {};
         let startTime = Date.now();
@@ -485,7 +488,7 @@
             window.dataLayer = window.dataLayer || [];
             window.dataLayer.push({
                 event: eventName,
-                page_variant: 'v2_google_ads_fixed',
+                page_variant: 'v2_web3forms',
                 ...eventData
             });
             
@@ -531,9 +534,15 @@
             }
         }
         
-        // Submit form avec meilleure gestion des erreurs
+        // Submit form avec Web3Forms
         async function submitForm() {
             if (!formData.status || !formData.experience || !formData.motivation || isSubmitting) return;
+            
+            // Vérifier que la clé est configurée
+            if (WEB3FORMS_ACCESS_KEY === 'VOTRE-CLE-ACCESS-ICI') {
+                alert('⚠️ Veuillez configurer votre clé Web3Forms dans le code !');
+                return;
+            }
             
             isSubmitting = true;
             const submitBtn = document.getElementById('submitBtn');
@@ -548,59 +557,72 @@
             const score = parseInt(formData.status) + parseInt(formData.experience) + parseInt(formData.motivation) + 1;
             
             // Track quiz completion (sans conversion)
-            trackEvent('quiz_completed_v2_fixed', {
+            trackEvent('quiz_completed_v2_web3forms', {
                 total_score: score,
                 max_score: 10,
                 completion_time: elapsedTime
             });
             
-            // Prepare final data
-            const finalData = {
-                ...formData,
-                score: score,
-                timestamp: new Date().toISOString(),
-                userAgent: navigator.userAgent,
-                referrer: document.referrer,
-                variant: 'v2_google_ads_fixed',
-                completion_time: elapsedTime,
-                page_url: window.location.href
-            };
-            
             let leadSent = false;
             
             try {
-                // Envoi à FormSubmit avec timeout
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 secondes timeout
-                
-                const response = await fetch('https://formsubmit.co/gerardeura@yahoo.fr', {
+                // Envoi à Web3Forms
+                const response = await fetch('https://api.web3forms.com/submit', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json'
                     },
-                    body: JSON.stringify(finalData),
-                    signal: controller.signal
+                    body: JSON.stringify({
+                        access_key: WEB3FORMS_ACCESS_KEY,
+                        subject: `🎯 Nouveau Lead CPF - Score: ${score}/10`,
+                        
+                        // Informations principales
+                        prenom: formData.firstName,
+                        nom: formData.lastName,
+                        email: formData.email,
+                        telephone: formData.phone,
+                        
+                        // Réponses au questionnaire
+                        statut_professionnel: formData.status === '3' ? 'Salarié/Fonctionnaire' : 
+                                              formData.status === '2' ? 'Indépendant/Demandeur emploi' : 'Étudiant',
+                        experience: formData.experience === '3' ? 'Plus de 5 ans' :
+                                   formData.experience === '2' ? 'Plus de 3 ans' : '0-3 ans',
+                        motivation: formData.motivation === '3' ? 'Reconversion/Évolution' : 'Faire le point',
+                        score_eligibilite: `${score}/10`,
+                        
+                        // Métadonnées
+                        date_soumission: new Date().toLocaleString('fr-FR'),
+                        temps_completion: `${elapsedTime} secondes`,
+                        source_page: window.location.href,
+                        referrer: document.referrer || 'Direct',
+                        
+                        // Options Web3Forms
+                        from_name: "CPF Questionnaire",
+                        redirect: false
+                    })
                 });
                 
-                clearTimeout(timeoutId);
+                const result = await response.json();
                 
-                // Vérifier si la réponse est OK
-                if (response.ok || response.status === 200 || response.status === 201) {
-                    console.log('✅ Lead envoyé avec succès!');
+                // Web3Forms renvoie {success: true} si ok
+                if (result.success) {
+                    console.log('✅ Lead envoyé avec succès via Web3Forms!');
+                    console.log('Message:', result.message);
                     leadSent = true;
                     
                     // CONVERSION GOOGLE ADS - Seulement si envoi réussi
                     trackGoogleAdsConversion(score >= 9 ? 15 : score >= 7 ? 12 : 10);
                     
                     // Track succès
-                    trackEvent('form_submitted_success_v2_fixed', {
-                        ...finalData,
-                        submission_status: 'success'
+                    trackEvent('form_submitted_success_v2_web3forms', {
+                        submission_status: 'success',
+                        score: score,
+                        web3forms_message: result.message
                     });
                     
                 } else {
-                    throw new Error(`Erreur serveur: ${response.status}`);
+                    throw new Error(result.message || 'Erreur Web3Forms');
                 }
                 
             } catch (error) {
@@ -608,7 +630,7 @@
                 leadSent = false;
                 
                 // Track échec (sans conversion)
-                trackEvent('form_submission_error_v2_fixed', {
+                trackEvent('form_submission_error_v2_web3forms', {
                     error_message: error.message,
                     score: score
                 });
@@ -643,19 +665,19 @@
                     icon = '🎉';
                     resultTitle.textContent = 'EXCELLENTE NOUVELLE !';
                     message = 'Vous êtes parfaitement éligible au financement CPF pour votre bilan de compétences.';
-                    trackEvent('high_eligibility_v2_fixed', { score: score });
+                    trackEvent('high_eligibility_v2_web3forms', { score: score });
                 } else if (score >= 7) {
                     className = 'warning';
                     icon = '✨';
                     resultTitle.textContent = 'BONNE NOUVELLE !';
                     message = 'Votre profil présente un excellent potentiel pour bénéficier d\'un bilan CPF.';
-                    trackEvent('medium_eligibility_v2_fixed', { score: score });
+                    trackEvent('medium_eligibility_v2_web3forms', { score: score });
                 } else {
                     className = 'danger';
                     icon = '🤔';
                     resultTitle.textContent = 'Étude personnalisée requise';
                     message = 'Nos experts analyseront votre profil pour vous proposer les meilleures solutions.';
-                    trackEvent('low_eligibility_v2_fixed', { score: score });
+                    trackEvent('low_eligibility_v2_web3forms', { score: score });
                 }
                 
                 resultCard.className = `result-card ${className}`;
@@ -672,7 +694,7 @@
         }
         
         // Track page view (sans conversion)
-        trackEvent('page_view_v2_fixed', {
+        trackEvent('page_view_v2_web3forms', {
             page_title: document.title,
             page_location: window.location.href
         });
