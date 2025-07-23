@@ -23,7 +23,8 @@
     🎯 Campagne: Campagne_Test
     📱 Contact: 0612345678 - marie@email.com
     💰 CPF déjà utilisé: ❌ Non
-    📊 Score: 9/10
+    💼 Salarié (5 dernières années): ✅ Plus de 2 ans
+    📊 Score: 8/10
     🔍 Mot-clé: bilan competences
     📱 Device: mobile
     
@@ -439,12 +440,11 @@
                 </div>
 
                 <div class="question">
-                    <div class="question-title">Expérience professionnelle :</div>
+                    <div class="question-title">Dans les 5 dernières années, avez-vous été salarié(e) ?</div>
                     <select id="experience" onchange="updateForm()">
                         <option value="">Sélectionnez...</option>
-                        <option value="1">Entre 0 et 3 ans</option>
-                        <option value="2">Plus de 3 ans</option>
-                        <option value="3">Plus de 5 ans</option>
+                        <option value="3">Plus de 2 ans</option>
+                        <option value="1">Moins de 2 ans</option>
                     </select>
                 </div>
 
@@ -506,13 +506,13 @@
         1. Récupération automatique des paramètres Google Ads
         2. Calcul du score basé sur :
            - CPF déjà utilisé : Non (3 pts) > Partiellement (2 pts) > Oui (1 pt)
-           - Expérience : Plus de 5 ans (3 pts) > Plus de 3 ans (2 pts) > 0-3 ans (1 pt)
+           - Salarié dans les 5 dernières années : Plus de 2 ans (3 pts) > Moins de 2 ans (1 pt)
            - Motivation : Reconversion/Évolution (3 pts) > Faire le point (2 pts)
         3. Valeur de conversion adaptée :
-           - Score 9-10 + CPF non utilisé = 20€ (meilleur lead)
-           - Score 9-10 = 15€
-           - Score 7-8 = 12€
-           - Score < 7 = 10€
+           - Score 8-10 + CPF non utilisé = 20€ (meilleur lead)
+           - Score 8-10 = 15€
+           - Score 6-7 = 12€
+           - Score < 6 = 10€
         4. Email enrichi avec toutes les infos de campagne
         */
         
@@ -703,6 +703,7 @@
                         "🎯 Campagne": campaignData.utm_campaign || 'Direct',
                         "📱 Contact": `${formData.phone} - ${formData.email}`,
                         "💰 CPF déjà utilisé": formData.cpfUsage === '3' ? '❌ Non' : formData.cpfUsage === '2' ? '⚠️ Partiellement' : '✅ Oui',
+                        "💼 Salarié (5 dernières années)": formData.experience === '3' ? '✅ Plus de 2 ans' : '⚠️ Moins de 2 ans',
                         "📊 Score": `${score}/10`,
                         "🔍 Mot-clé": campaignData.keyword || 'Non spécifié',
                         [`${getDeviceEmoji(campaignData.device)} Device`]: campaignData.device,
@@ -718,8 +719,7 @@
                         "📋 RÉPONSES AU QUESTIONNAIRE": "========================",
                         cpf_deja_utilise: formData.cpfUsage === '3' ? 'Non' : 
                                          formData.cpfUsage === '2' ? 'Partiellement' : 'Oui',
-                        experience: formData.experience === '3' ? 'Plus de 5 ans' :
-                                   formData.experience === '2' ? 'Plus de 3 ans' : '0-3 ans',
+                        salarie_5_dernieres_annees: formData.experience === '3' ? 'Plus de 2 ans' : 'Moins de 2 ans',
                         motivation: formData.motivation === '3' ? 'Reconversion/Évolution' : 'Faire le point',
                         score_eligibilite: `${score}/10`,
                         
@@ -757,9 +757,9 @@
                     leadSent = true;
                     
                     // CONVERSION GOOGLE ADS - Valeurs basées sur le score et CPF non utilisé
-                    const conversionValue = score >= 9 && formData.cpfUsage === '3' ? 20 : // Score élevé + CPF non utilisé
-                                          score >= 9 ? 15 : 
-                                          score >= 7 ? 12 : 10;
+                    const conversionValue = score >= 8 && formData.cpfUsage === '3' ? 20 : // Score élevé + CPF non utilisé
+                                          score >= 8 ? 15 : 
+                                          score >= 6 ? 12 : 10;
                     
                     trackGoogleAdsConversion(conversionValue);
                     
@@ -827,13 +827,13 @@
                 
                 let message, className, icon;
                 
-                if (score >= 9) {
+                if (score >= 8) {
                     className = '';
                     icon = '🎉';
                     resultTitle.textContent = 'EXCELLENTE NOUVELLE !';
                     message = 'Vous êtes parfaitement éligible au financement CPF pour votre bilan de compétences.';
                     trackEvent('high_eligibility_v2_web3forms', { score: score });
-                } else if (score >= 7) {
+                } else if (score >= 6) {
                     className = 'warning';
                     icon = '✨';
                     resultTitle.textContent = 'BONNE NOUVELLE !';
