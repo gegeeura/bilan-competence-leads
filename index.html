@@ -3,7 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Activez vos 1600€ CPF - Bilan de Compétences</title>
+    <title>Bilan de Compétences CPF - 100% Finançable</title>
+    
+    <!-- 
+    ⚠️ IMPORTANT : Configuration des URL de destination dans Google Ads
+    
+    Pour tracker correctement vos campagnes, utilisez ces paramètres dans vos URLs finales :
+    
+    URL finale type : 
+    https://votresite.com/cpf-questionnaire.html?utm_source=google&utm_medium=cpc&utm_campaign={campaignname}&utm_term={keyword}&gclid={gclid}&device={device}&campaignid={campaignid}&adgroupid={adgroupid}
+    
+    Les variables entre {} seront automatiquement remplacées par Google Ads.
+    
+    📧 EXEMPLE D'EMAIL QUE VOUS RECEVREZ :
+    
+    Objet : 🎯 CPF [Campagne Test] - Score: 9/10 - Marie MARTIN
+    
+    ⚡ RÉSUMÉ RAPIDE: ========================
+    🎯 Campagne: Campagne_Test
+    📱 Contact: 0612345678 - marie@email.com
+    💰 CPF déjà utilisé: ❌ Non
+    📊 Score: 9/10
+    🔍 Mot-clé: bilan competences
+    📱 Device: mobile
+    
+    🧪 TEST : Ajoutez ?test=true à l'URL pour voir les paramètres détectés
+    -->
     
     <!-- Google Tag Manager -->
     <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
@@ -50,28 +75,39 @@
             overflow: hidden;
         }
         
-        /* Panneau rouge agrandi */
+        /* Panneau rouge modifié */
         .alert-banner {
             background: linear-gradient(135deg, #dc2626, #b91c1c);
             color: white;
             padding: 20px 25px;
-            font-size: 1.3rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
             box-shadow: 0 4px 15px rgba(220, 38, 38, 0.3);
             position: relative;
         }
         
-        .alert-banner::before {
-            content: "🚨";
-            font-size: 1.5rem;
-            margin-right: 10px;
+        .alert-banner .main-title {
+            font-size: 2rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
         
-        .alert-banner .amount {
-            font-size: 1.6rem;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        .alert-banner .sub-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.95;
+        }
+        
+        .alert-banner .sub-title-2 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.9;
         }
         
         .content-wrapper {
@@ -303,12 +339,20 @@
         
         @media (max-width: 480px) {
             .alert-banner {
-                font-size: 1.1rem;
                 padding: 15px 20px;
             }
             
-            .alert-banner .amount {
-                font-size: 1.3rem;
+            .alert-banner .main-title {
+                font-size: 1.4rem;
+                letter-spacing: 1px;
+            }
+            
+            .alert-banner .sub-title {
+                font-size: 0.95rem;
+            }
+            
+            .alert-banner .sub-title-2 {
+                font-size: 0.9rem;
             }
             
             .content-wrapper {
@@ -348,10 +392,11 @@
     <div class="container">
         <div class="timer" id="timer">⏱️ 30 sec</div>
         
-        <!-- Panneau rouge agrandi -->
+        <!-- Panneau rouge modifié -->
         <div class="alert-banner">
-            Activez vos <span class="amount">1600€ CPF</span><br>
-            Bilan de compétences gratuit
+            <div class="main-title">📚 BILAN DE COMPÉTENCES</div>
+            <div class="sub-title">Activez votre CPF</div>
+            <div class="sub-title-2">100% Finançable</div>
         </div>
         
         <div class="content-wrapper">
@@ -382,13 +427,14 @@
 
             <!-- Section Formulaire -->
             <div class="form-section" id="formSection">
+                <!-- Question modifiée -->
                 <div class="question">
-                    <div class="question-title">Votre statut professionnel :</div>
-                    <select id="status" onchange="updateForm()">
+                    <div class="question-title">Avez-vous déjà utilisé votre CPF ?</div>
+                    <select id="cpfUsage" onchange="updateForm()">
                         <option value="">Sélectionnez...</option>
-                        <option value="3">Salarié(e) ou Fonctionnaire</option>
-                        <option value="2">Indépendant ou Demandeur d'emploi</option>
-                        <option value="1">Étudiant</option>
+                        <option value="3">Non</option>
+                        <option value="2">Partiellement</option>
+                        <option value="1">Oui</option>
                     </select>
                 </div>
 
@@ -454,32 +500,76 @@
     </div>
 
     <script>
-        // ⚠️ IMPORTANT: Remplacez cette valeur par votre vraie clé Web3Forms
+        /* 
+        📊 SYSTÈME DE TRACKING INTÉGRÉ :
+        
+        1. Récupération automatique des paramètres Google Ads
+        2. Calcul du score basé sur :
+           - CPF déjà utilisé : Non (3 pts) > Partiellement (2 pts) > Oui (1 pt)
+           - Expérience : Plus de 5 ans (3 pts) > Plus de 3 ans (2 pts) > 0-3 ans (1 pt)
+           - Motivation : Reconversion/Évolution (3 pts) > Faire le point (2 pts)
+        3. Valeur de conversion adaptée :
+           - Score 9-10 + CPF non utilisé = 20€ (meilleur lead)
+           - Score 9-10 = 15€
+           - Score 7-8 = 12€
+           - Score < 7 = 10€
+        4. Email enrichi avec toutes les infos de campagne
+        */
+        
+        // Configuration Web3Forms 
+        // 📧 L'email sera envoyé à l'adresse configurée dans votre compte Web3Forms
+        // Connectez-vous sur https://web3forms.com pour configurer l'email de réception
         const WEB3FORMS_ACCESS_KEY = '74e941d4-00d4-4eab-8644-9aff8bc93cb9';
         
-   // Fonction simple pour lire l'URL
         // Variables globales
-let formData = {};
-let startTime = Date.now();
-let isSubmitting = false;
-function getCampaignFromURL() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const campaign = urlParams.get('utm_campaign') || 'Non identifiée';
-    const source = urlParams.get('utm_source') || '';
-    const medium = urlParams.get('utm_medium') || '';
-    
-    // Identifier la campagne
-    if (campaign.includes('pmax')) return 'Performance Max';
-    if (campaign.includes('search_cpf_2')) return 'Campagne 2 Search';
-    if (campaign.includes('search_cpf_3')) return 'Campagne 3 Search';
-    
-    return campaign;
-}
-
-// Capturer dès le chargement
-const campaignName = getCampaignFromURL();
-
-      
+        let formData = {};
+        let startTime = Date.now();
+        let isSubmitting = false;
+        
+        // Récupérer les paramètres UTM et Google Ads de l'URL
+        function getURLParameters() {
+            const params = new URLSearchParams(window.location.search);
+            return {
+                utm_source: params.get('utm_source') || 'direct',
+                utm_medium: params.get('utm_medium') || 'none',
+                utm_campaign: params.get('utm_campaign') || 'non-defini',
+                utm_term: params.get('utm_term') || '',
+                utm_content: params.get('utm_content') || '',
+                gclid: params.get('gclid') || '', // Google Click ID
+                keyword: params.get('keyword') || params.get('utm_term') || '',
+                device: params.get('device') || detectDevice(),
+                campaignid: params.get('campaignid') || '',
+                adgroupid: params.get('adgroupid') || '',
+                creative: params.get('creative') || ''
+            };
+        }
+        
+        // Détecter le type d'appareil
+        function detectDevice() {
+            const userAgent = navigator.userAgent.toLowerCase();
+            if (/mobile|android|iphone|ipod/.test(userAgent)) return 'mobile';
+            if (/ipad|tablet/.test(userAgent)) return 'tablet';
+            return 'desktop';
+        }
+        
+        // Obtenir l'émoji du device
+        function getDeviceEmoji(device) {
+            switch(device) {
+                case 'mobile': return '📱';
+                case 'tablet': return '📱';
+                case 'desktop': return '💻';
+                default: return '❓';
+            }
+        }
+        
+        // Nettoyer le nom de campagne
+        function cleanCampaignName(name) {
+            if (!name || name === 'non-defini') return 'Direct';
+            return name.replace(/[_-]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        }
+        
+        // Stocker les paramètres dès le chargement
+        const campaignData = getURLParameters();
         
         // Timer de 30 secondes
         let timeLeft = 30;
@@ -501,20 +591,20 @@ const campaignName = getCampaignFromURL();
             }
         }, 1000);
         
-        // Tracking événements (sans conversion)
+        // Tracking événements
         function trackEvent(eventName, eventData = {}) {
-            // Ne PAS déclencher de conversion ici
             window.dataLayer = window.dataLayer || [];
             window.dataLayer.push({
                 event: eventName,
                 page_variant: 'v2_web3forms',
+                campaign_data: campaignData,
                 ...eventData
             });
             
             console.log('Event tracked:', eventName, eventData);
         }
         
-        // Tracking conversion Google Ads (sera appelé uniquement après succès)
+        // Tracking conversion Google Ads
         function trackGoogleAdsConversion(leadValue = 12) {
             console.log('🎯 Tracking Google Ads Conversion - Lead confirmé!');
             
@@ -522,20 +612,30 @@ const campaignName = getCampaignFromURL();
                 'send_to': 'AW-17340136465',
                 'value': leadValue,
                 'currency': 'EUR',
-                'transaction_id': Date.now().toString() // ID unique pour éviter les doublons
+                'transaction_id': Date.now().toString()
             });
             
-            // Track aussi dans dataLayer pour GTM
+            // Track aussi dans dataLayer pour GTM avec infos campagne
+            window.dataLayer = window.dataLayer || [];
             window.dataLayer.push({
                 event: 'lead_confirmed',
                 conversion_value: leadValue,
-                conversion_currency: 'EUR'
+                conversion_currency: 'EUR',
+                campaign_name: campaignData.utm_campaign,
+                campaign_source: campaignData.utm_source,
+                campaign_medium: campaignData.utm_medium,
+                campaign_keyword: campaignData.keyword
+            });
+            
+            console.log('✅ Pixel de conversion déclenché pour:', {
+                campagne: campaignData.utm_campaign,
+                valeur: leadValue
             });
         }
         
         // Update form validation
         function updateForm() {
-            const status = document.getElementById('status').value;
+            const cpfUsage = document.getElementById('cpfUsage').value;
             const experience = document.getElementById('experience').value;
             const motivation = document.getElementById('motivation').value;
             const firstName = document.getElementById('firstName').value.trim();
@@ -543,19 +643,19 @@ const campaignName = getCampaignFromURL();
             const email = document.getElementById('email').value.trim();
             const phone = document.getElementById('phone').value.trim();
             
-            const isComplete = status && experience && motivation && firstName && lastName && 
+            const isComplete = cpfUsage && experience && motivation && firstName && lastName && 
                               email.includes('@') && phone;
             
             document.getElementById('submitBtn').disabled = !isComplete || isSubmitting;
             
             if (isComplete) {
-                formData = { status, experience, motivation, firstName, lastName, email, phone };
+                formData = { cpfUsage, experience, motivation, firstName, lastName, email, phone };
             }
         }
         
         // Submit form avec Web3Forms
         async function submitForm() {
-            if (!formData.status || !formData.experience || !formData.motivation || isSubmitting) return;
+            if (!formData.cpfUsage || !formData.experience || !formData.motivation || isSubmitting) return;
             
             // Vérifier que la clé est configurée
             if (WEB3FORMS_ACCESS_KEY === 'VOTRE-CLE-ACCESS-ICI') {
@@ -572,14 +672,16 @@ const campaignName = getCampaignFromURL();
             
             const elapsedTime = Math.round((Date.now() - startTime) / 1000);
             
-            // Calculate score
-            const score = parseInt(formData.status) + parseInt(formData.experience) + parseInt(formData.motivation) + 1;
+            // Calculate score based on answers
+            const score = parseInt(formData.cpfUsage) + parseInt(formData.experience) + parseInt(formData.motivation) + 1;
             
-            // Track quiz completion (sans conversion)
+            // Track quiz completion
             trackEvent('quiz_completed_v2_web3forms', {
                 total_score: score,
                 max_score: 10,
-                completion_time: elapsedTime
+                completion_time: elapsedTime,
+                campaign_name: campaignData.utm_campaign,
+                campaign_source: campaignData.utm_source
             });
             
             let leadSent = false;
@@ -594,35 +696,54 @@ const campaignName = getCampaignFromURL();
                     },
                     body: JSON.stringify({
                         access_key: WEB3FORMS_ACCESS_KEY,
-                       subject: `🎯 Lead CPF - ${campaignName} - Score: ${score}/10`,
+                        subject: `🎯 CPF [${cleanCampaignName(campaignData.utm_campaign)}] - Score: ${score}/10 - ${formData.firstName} ${formData.lastName}`,
                         
-                        // Informations principales
-                 // Informations principales
-prenom: formData.firstName,
-nom: formData.lastName,
-email: formData.email,
-telephone: formData.phone,
-campagne_source: campaignName,
-url_complete: window.location.href,
-
-// Réponses au questionnaire
+                        // RÉSUMÉ RAPIDE
+                        "⚡ RÉSUMÉ RAPIDE": "========================",
+                        "🎯 Campagne": campaignData.utm_campaign || 'Direct',
+                        "📱 Contact": `${formData.phone} - ${formData.email}`,
+                        "💰 CPF déjà utilisé": formData.cpfUsage === '3' ? '❌ Non' : formData.cpfUsage === '2' ? '⚠️ Partiellement' : '✅ Oui',
+                        "📊 Score": `${score}/10`,
+                        "🔍 Mot-clé": campaignData.keyword || 'Non spécifié',
+                        [`${getDeviceEmoji(campaignData.device)} Device`]: campaignData.device,
+                        
+                        // Informations du lead
+                        "👤 INFORMATIONS CLIENT": "========================",
+                        prenom: formData.firstName,
+                        nom: formData.lastName,
+                        email: formData.email,
+                        telephone: formData.phone,
                         
                         // Réponses au questionnaire
-                        statut_professionnel: formData.status === '3' ? 'Salarié/Fonctionnaire' : 
-                                              formData.status === '2' ? 'Indépendant/Demandeur emploi' : 'Étudiant',
+                        "📋 RÉPONSES AU QUESTIONNAIRE": "========================",
+                        cpf_deja_utilise: formData.cpfUsage === '3' ? 'Non' : 
+                                         formData.cpfUsage === '2' ? 'Partiellement' : 'Oui',
                         experience: formData.experience === '3' ? 'Plus de 5 ans' :
                                    formData.experience === '2' ? 'Plus de 3 ans' : '0-3 ans',
                         motivation: formData.motivation === '3' ? 'Reconversion/Évolution' : 'Faire le point',
                         score_eligibilite: `${score}/10`,
                         
+                        // INFORMATIONS DE CAMPAGNE GOOGLE ADS
+                        "🎯 SOURCE CAMPAGNE": "========================",
+                        campagne_google_ads: campaignData.utm_campaign || 'Non défini',
+                        source_trafic: campaignData.utm_source || 'Direct',
+                        medium: campaignData.utm_medium || 'None',
+                        mot_cle: campaignData.keyword || 'Non spécifié',
+                        groupe_annonces: campaignData.adgroupid || 'Non spécifié',
+                        device: campaignData.device || 'Unknown',
+                        google_click_id: campaignData.gclid || 'Absent',
+                        
                         // Métadonnées
+                        "📊 DONNÉES TECHNIQUES": "========================",
                         date_soumission: new Date().toLocaleString('fr-FR'),
                         temps_completion: `${elapsedTime} secondes`,
-                        source_page: window.location.href,
+                        source_page: 'Questionnaire CPF',
+                        url_complete: window.location.href,
+                        url_sans_params: window.location.origin + window.location.pathname,
                         referrer: document.referrer || 'Direct',
                         
                         // Options Web3Forms
-                        from_name: "CPF Questionnaire",
+                        from_name: `CPF Quiz - ${cleanCampaignName(campaignData.utm_campaign)}`,
                         redirect: false
                     })
                 });
@@ -635,14 +756,28 @@ url_complete: window.location.href,
                     console.log('Message:', result.message);
                     leadSent = true;
                     
-                    // CONVERSION GOOGLE ADS - Seulement si envoi réussi
-                    trackGoogleAdsConversion(score >= 9 ? 15 : score >= 7 ? 12 : 10);
+                    // CONVERSION GOOGLE ADS - Valeurs basées sur le score et CPF non utilisé
+                    const conversionValue = score >= 9 && formData.cpfUsage === '3' ? 20 : // Score élevé + CPF non utilisé
+                                          score >= 9 ? 15 : 
+                                          score >= 7 ? 12 : 10;
                     
-                    // Track succès
+                    trackGoogleAdsConversion(conversionValue);
+                    
+                    // Track succès avec infos campagne
                     trackEvent('form_submitted_success_v2_web3forms', {
                         submission_status: 'success',
                         score: score,
+                        campaign: campaignData.utm_campaign,
+                        source: campaignData.utm_source,
                         web3forms_message: result.message
+                    });
+                    
+                    // Log les infos de campagne pour debug
+                    console.log('📊 Infos campagne envoyées:', {
+                        campagne: campaignData.utm_campaign,
+                        source: campaignData.utm_source,
+                        mot_cle: campaignData.keyword,
+                        device: campaignData.device
                     });
                     
                 } else {
@@ -653,10 +788,18 @@ url_complete: window.location.href,
                 console.error('❌ Erreur lors de l\'envoi:', error);
                 leadSent = false;
                 
-                // Track échec (sans conversion)
+                // Track échec avec infos campagne
                 trackEvent('form_submission_error_v2_web3forms', {
                     error_message: error.message,
-                    score: score
+                    score: score,
+                    campaign: campaignData.utm_campaign
+                });
+                
+                // Sauvegarder les infos localement pour debug
+                console.error('Lead non envoyé - Infos:', {
+                    lead: formData,
+                    campagne: campaignData,
+                    erreur: error.message
                 });
                 
                 // Afficher message d'erreur
@@ -717,11 +860,21 @@ url_complete: window.location.href,
             isSubmitting = false;
         }
         
-        // Track page view (sans conversion)
+        // Track page view au chargement
         trackEvent('page_view_v2_web3forms', {
             page_title: document.title,
-            page_location: window.location.href
+            page_location: window.location.href,
+            campaign_source: campaignData.utm_source,
+            campaign_name: campaignData.utm_campaign
         });
+        
+        // Pour debug : afficher les paramètres de campagne dans la console
+        console.log('🎯 Paramètres de campagne détectés:', campaignData);
+        
+        // Test : Ajouter ?test=true dans l'URL pour voir les paramètres
+        if (new URLSearchParams(window.location.search).get('test') === 'true') {
+            alert(`Test - Paramètres détectés:\n\nCampagne: ${campaignData.utm_campaign}\nSource: ${campaignData.utm_source}\nMot-clé: ${campaignData.keyword}\nDevice: ${campaignData.device}`);
+        }
         
         // Add pulse animation for timer
         const style = document.createElement('style');
