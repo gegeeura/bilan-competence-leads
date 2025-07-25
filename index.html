@@ -352,6 +352,22 @@
             z-index: 9999;
         }
         
+        /* Alert de protection */
+        .conversion-alert {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #ef4444;
+            color: white;
+            padding: 20px 30px;
+            border-radius: 10px;
+            font-weight: bold;
+            z-index: 10000;
+            display: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
         @keyframes pulse {
             0%, 100% { transform: scale(1); }
             50% { transform: scale(1.02); }
@@ -401,11 +417,17 @@
     height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <!-- End Google Tag Manager (noscript) -->
 
+    <!-- Alert de protection contre double conversion -->
+    <div class="conversion-alert" id="conversionAlert">
+        ⚠️ Conversion déjà envoyée!
+    </div>
+
     <!-- Debug Info -->
     <div class="debug-info" id="debugInfo">
         Page: <span id="debugPage">1</span><br>
         Events sent: <span id="debugEvents">0</span><br>
-        Conversion: <span id="debugConversion">NON</span>
+        Conversion: <span id="debugConversion">NON</span><br>
+        Session ID: <span id="debugSession"></span>
     </div>
 
     <!-- Section Hero avec image et texte -->
@@ -570,7 +592,7 @@
         // Configuration
         const WEB3FORMS_ACCESS_KEY = '74e941d4-00d4-4eab-8644-9aff8bc93cb9';
         
-        // État global
+        // État global avec ID de session unique
         const state = {
             currentPage: 1,
             formData: {},
@@ -579,7 +601,8 @@
             isSubmitting: false,
             choiceProcessing: false,
             conversionSent: false,
-            eventsSent: 0
+            eventsSent: 0,
+            sessionId: 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9)
         };
         
         // Debug info
@@ -587,14 +610,34 @@
             document.getElementById('debugPage').textContent = state.currentPage;
             document.getElementById('debugEvents').textContent = state.eventsSent;
             document.getElementById('debugConversion').textContent = state.conversionSent ? 'OUI' : 'NON';
+            document.getElementById('debugSession').textContent = state.sessionId.substr(-8);
         }
         
         updateDebug();
         
         console.log('=================================');
-        console.log('🛡️ FORMULAIRE INITIALISÉ');
-        console.log('Version: GTM avec événement personnalisé');
+        console.log('🛡️ FORMULAIRE INITIALISÉ - VERSION PROTECTION DOUBLE CONVERSION');
+        console.log('Session ID:', state.sessionId);
         console.log('=================================');
+        
+        // Vérifier les duplicatas de conversions (protection supplémentaire)
+        let conversionCheckInterval = setInterval(() => {
+            if (state.conversionSent && window.dataLayer) {
+                const conversionEvents = window.dataLayer.filter(e => 
+                    e.event === 'bilan_competences_lead_generated' && 
+                    e.session_id === state.sessionId
+                );
+                
+                if (conversionEvents.length > 1) {
+                    console.error('⚠️ ALERTE: MULTIPLE CONVERSIONS DÉTECTÉES!');
+                    console.error('Nombre de conversions:', conversionEvents.length);
+                    document.getElementById('conversionAlert').style.display = 'block';
+                    setTimeout(() => {
+                        document.getElementById('conversionAlert').style.display = 'none';
+                    }, 3000);
+                }
+            }
+        }, 1000);
         
         // Tracking des événements NON-conversion
         function trackEvent(eventName, eventData = {}) {
@@ -607,6 +650,7 @@
             window.dataLayer = window.dataLayer || [];
             window.dataLayer.push({
                 event: eventName,
+                session_id: state.sessionId,
                 ...eventData
             });
             
@@ -723,6 +767,7 @@
                         date_soumission: new Date().toLocaleString('fr-FR'),
                         temps_completion: `${elapsedTime} secondes`,
                         formulaire: 'Bilan Compétences GTM',
+                        session_id: state.sessionId,
                         
                         from_name: "Test Éligibilité Bilan",
                         redirect: false
@@ -756,7 +801,7 @@
             document.getElementById('page2').classList.add('active');
             updateDebug();
             
-            console.log('📄 PAGE 2 AFFICHÉE - Toujours pas de conversion');
+            console.log('📄 PAGE 2 AFFICHÉE - En attente du choix utilisateur');
             
             const resultIcon = document.getElementById('resultIcon');
             const resultTitle = document.getElementById('resultTitle');
@@ -783,6 +828,7 @@
         function handleChoice(choice) {
             console.log('=================================');
             console.log(`🎯 CHOIX UTILISATEUR: ${choice}`);
+            console.log('Session:', state.sessionId);
             console.log('=================================');
             
             // Protection contre double-clic
@@ -793,20 +839,14 @@
             
             state.choiceProcessing = true;
             
-            // Désactiver les boutons
+            // Désactiver IMMÉDIATEMENT les boutons
             document.getElementById('btnYes').disabled = true;
             document.getElementById('btnNo').disabled = true;
             
             if (choice === 'yes') {
                 console.log('✅ CHOIX OUI CONFIRMÉ');
                 
-                // Afficher page 3
-                state.currentPage = 3;
-                document.getElementById('page2').classList.remove('active');
-                document.getElementById('page3').classList.add('active');
-                updateDebug();
-                
-                // ENVOYER L'ÉVÉNEMENT DE CONVERSION UNIQUEMENT ICI
+                // ENVOYER L'ÉVÉNEMENT DE CONVERSION UNE SEULE FOIS
                 if (!state.conversionSent) {
                     state.conversionSent = true;
                     
@@ -814,23 +854,26 @@
                     const conversionValue = state.userScore >= 8 ? 30 : 
                                           state.userScore >= 6 ? 20 : 15;
                     
-                    console.log('🚀 ENVOI ÉVÉNEMENT CONVERSION À GTM');
+                    console.log('🚀 ENVOI UNIQUE DE LA CONVERSION À GTM');
                     console.log(`   Event: bilan_competences_lead_generated`);
                     console.log(`   Valeur: ${conversionValue} EUR`);
                     console.log(`   Score: ${state.userScore}/10`);
+                    console.log(`   Session: ${state.sessionId}`);
                     
-                    // ÉVÉNEMENT SPÉCIFIQUE POUR DÉCLENCHER LA CONVERSION
+                    // ÉVÉNEMENT DE CONVERSION UNIQUE
                     window.dataLayer = window.dataLayer || [];
                     window.dataLayer.push({
-                        'event': 'bilan_competences_lead_generated',  // Cet événement doit correspondre EXACTEMENT au déclencheur GTM
+                        'event': 'bilan_competences_lead_generated',
                         'conversion_value': conversionValue,
                         'user_score': state.userScore,
                         'campaign': campaignData.utm_campaign,
                         'source': campaignData.utm_source,
-                        'device': campaignData.device
+                        'device': campaignData.device,
+                        'session_id': state.sessionId,
+                        'timestamp': new Date().toISOString()
                     });
                     
-                    console.log('✅ Événement bilan_competences_lead_generated envoyé à GTM');
+                    console.log('✅ Conversion envoyée UNE SEULE FOIS');
                     
                     // Tracking supplémentaire (non-conversion)
                     trackEvent('contact_accepted', {
@@ -840,6 +883,14 @@
                     
                     updateDebug();
                 }
+                
+                // Afficher page 3 APRÈS l'envoi de la conversion
+                setTimeout(() => {
+                    state.currentPage = 3;
+                    document.getElementById('page2').classList.remove('active');
+                    document.getElementById('page3').classList.add('active');
+                    updateDebug();
+                }, 100);
                 
             } else if (choice === 'no') {
                 console.log('❌ CHOIX NON - AUCUNE conversion');
@@ -879,8 +930,8 @@
             source: campaignData.utm_source
         });
         
-        console.log('✅ Script prêt - En attente action utilisateur');
-        console.log('ℹ️ La conversion ne se déclenchera QUE sur le clic OUI');
+        console.log('✅ Script prêt - Protection anti-double conversion ACTIVE');
+        console.log('ℹ️ La conversion ne se déclenchera QU\'UNE SEULE FOIS sur le clic OUI');
     </script>
 </body>
 </html>
