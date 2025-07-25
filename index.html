@@ -13,15 +13,6 @@
     })(window,document,'script','dataLayer','GTM-KXRTJZHW');</script>
     <!-- End Google Tag Manager -->
     
-    <!-- Google Ads Conversion Tracking -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17340136465"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-        gtag('config', 'AW-17340136465');
-    </script>
-    
     <style>
         * {
             margin: 0;
@@ -346,6 +337,21 @@
             display: none;
         }
         
+        /* Debug info */
+        .debug-info {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.8);
+            color: #0f0;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 11px;
+            border-radius: 5px;
+            max-width: 300px;
+            z-index: 9999;
+        }
+        
         @keyframes pulse {
             0%, 100% { transform: scale(1); }
             50% { transform: scale(1.02); }
@@ -382,6 +388,10 @@
             .content-wrapper {
                 padding: 30px 20px;
             }
+            
+            .debug-info {
+                display: none;
+            }
         }
     </style>
 </head>
@@ -390,6 +400,13 @@
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KXRTJZHW"
     height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <!-- End Google Tag Manager (noscript) -->
+
+    <!-- Debug Info -->
+    <div class="debug-info" id="debugInfo">
+        Page: <span id="debugPage">1</span><br>
+        Events sent: <span id="debugEvents">0</span><br>
+        Conversion: <span id="debugConversion">NON</span>
+    </div>
 
     <!-- Section Hero avec image et texte -->
     <div class="hero-section">
@@ -506,10 +523,10 @@
                     </p>
                     
                     <div class="choice-buttons">
-                        <button class="choice-button yes" onclick="handleChoice('yes')">
+                        <button class="choice-button yes" id="btnYes" onclick="handleChoice('yes')">
                             ✅ OUI
                         </button>
-                        <button class="choice-button no" onclick="handleChoice('no')">
+                        <button class="choice-button no" id="btnNo" onclick="handleChoice('no')">
                             ❌ NON
                         </button>
                     </div>
@@ -550,18 +567,56 @@
     </div>
 
     <script>
-        // Configuration Web3Forms 
+        // Configuration
         const WEB3FORMS_ACCESS_KEY = '74e941d4-00d4-4eab-8644-9aff8bc93cb9';
         
-        // Variables globales
-        let formData = {};
-        let startTime = Date.now();
-        let isSubmitting = false;
-        let userScore = 0;
-        let conversionTriggered = false; // NOUVEAU: Protection contre doublons de pixel
-        let choiceProcessing = false; // NOUVEAU: Protection contre double-clic
+        // État global
+        const state = {
+            currentPage: 1,
+            formData: {},
+            userScore: 0,
+            startTime: Date.now(),
+            isSubmitting: false,
+            choiceProcessing: false,
+            conversionSent: false,
+            eventsSent: 0
+        };
         
-        // Récupérer les paramètres UTM et Google Ads
+        // Debug info
+        function updateDebug() {
+            document.getElementById('debugPage').textContent = state.currentPage;
+            document.getElementById('debugEvents').textContent = state.eventsSent;
+            document.getElementById('debugConversion').textContent = state.conversionSent ? 'OUI' : 'NON';
+        }
+        
+        updateDebug();
+        
+        console.log('=================================');
+        console.log('🛡️ FORMULAIRE INITIALISÉ');
+        console.log('Version: GTM avec événement personnalisé');
+        console.log('=================================');
+        
+        // Tracking des événements NON-conversion
+        function trackEvent(eventName, eventData = {}) {
+            // IMPORTANT: Ne jamais envoyer d'événement de conversion ici
+            if (eventName === 'bilan_competences_lead_generated') {
+                console.error('⛔ Ne pas utiliser trackEvent pour les conversions!');
+                return;
+            }
+            
+            window.dataLayer = window.dataLayer || [];
+            window.dataLayer.push({
+                event: eventName,
+                ...eventData
+            });
+            
+            state.eventsSent++;
+            updateDebug();
+            
+            console.log(`📊 Event tracked: ${eventName}`);
+        }
+        
+        // Récupérer les paramètres
         function getURLParameters() {
             const params = new URLSearchParams(window.location.search);
             return {
@@ -571,82 +626,74 @@
                 utm_term: params.get('utm_term') || '',
                 gclid: params.get('gclid') || '',
                 keyword: params.get('keyword') || params.get('utm_term') || '',
-                device: params.get('device') || detectDevice()
+                device: /mobile|android|iphone/i.test(navigator.userAgent) ? 'mobile' : 'desktop'
             };
-        }
-        
-        function detectDevice() {
-            const userAgent = navigator.userAgent.toLowerCase();
-            if (/mobile|android|iphone|ipod/.test(userAgent)) return 'mobile';
-            if (/ipad|tablet/.test(userAgent)) return 'tablet';
-            return 'desktop';
         }
         
         const campaignData = getURLParameters();
         
-        // Timer de 30 secondes
+        // Timer
         let timeLeft = 30;
         const timerElement = document.getElementById('timer');
-        
         const countdown = setInterval(() => {
             timeLeft--;
             timerElement.textContent = `⏱️ ${timeLeft}s`;
-            
             if (timeLeft <= 10) {
                 timerElement.style.background = 'rgba(239, 68, 68, 0.9)';
                 timerElement.style.color = 'white';
-                timerElement.style.animation = 'pulse 1s infinite';
             }
-            
             if (timeLeft <= 0) {
                 clearInterval(countdown);
                 timerElement.style.display = 'none';
             }
         }, 1000);
         
-        // Tracking événements
-        function trackEvent(eventName, eventData = {}) {
-            window.dataLayer = window.dataLayer || [];
-            window.dataLayer.push({
-                event: eventName,
-                page_variant: 'bilan_modified',
-                campaign_data: campaignData,
-                ...eventData
-            });
-        }
-        
-        // Update form validation
+        // Validation du formulaire
         function updateForm() {
-            const cpfUsage = document.getElementById('cpfUsage').value;
-            const experience = document.getElementById('experience').value;
-            const motivation = document.getElementById('motivation').value;
-            const firstName = document.getElementById('firstName').value.trim();
-            const lastName = document.getElementById('lastName').value.trim();
-            const email = document.getElementById('email').value.trim();
-            const phone = document.getElementById('phone').value.trim();
+            const fields = ['cpfUsage', 'experience', 'motivation', 'firstName', 'lastName', 'email', 'phone'];
+            const values = {};
+            let isComplete = true;
             
-            const isComplete = cpfUsage && experience && motivation && firstName && lastName && 
-                              email.includes('@') && phone;
+            fields.forEach(field => {
+                const element = document.getElementById(field);
+                values[field] = element.value.trim();
+                if (!values[field]) isComplete = false;
+            });
             
-            document.getElementById('submitBtn').disabled = !isComplete || isSubmitting;
+            if (!values.email.includes('@')) isComplete = false;
+            
+            document.getElementById('submitBtn').disabled = !isComplete || state.isSubmitting;
             
             if (isComplete) {
-                formData = { cpfUsage, experience, motivation, firstName, lastName, email, phone };
+                state.formData = values;
             }
         }
         
-        // Submit form
+        // Soumission du formulaire - PAS DE CONVERSION ICI
         async function submitForm() {
-            if (!formData.cpfUsage || !formData.experience || !formData.motivation || isSubmitting) return;
+            console.log('📋 SOUMISSION FORMULAIRE - PAGE 1');
+            console.log('⚠️ AUCUNE conversion ne doit se déclencher ici!');
             
-            isSubmitting = true;
+            if (!state.formData.cpfUsage || state.isSubmitting) return;
+            
+            state.isSubmitting = true;
             const submitBtn = document.getElementById('submitBtn');
             const originalText = submitBtn.innerHTML;
             submitBtn.innerHTML = '⏳ Envoi en cours...';
             submitBtn.disabled = true;
             
-            const elapsedTime = Math.round((Date.now() - startTime) / 1000);
-            userScore = parseInt(formData.cpfUsage) + parseInt(formData.experience) + parseInt(formData.motivation) + 1;
+            // Calcul du score
+            state.userScore = parseInt(state.formData.cpfUsage) + 
+                             parseInt(state.formData.experience) + 
+                             parseInt(state.formData.motivation) + 1;
+            
+            const elapsedTime = Math.round((Date.now() - state.startTime) / 1000);
+            
+            // Tracking simple (pas de conversion)
+            trackEvent('form_submit', {
+                score: state.userScore,
+                campaign: campaignData.utm_campaign
+            });
             
             try {
                 const response = await fetch('https://api.web3forms.com/submit', {
@@ -657,28 +704,25 @@
                     },
                     body: JSON.stringify({
                         access_key: WEB3FORMS_ACCESS_KEY,
-                        subject: `🎯 Bilan Compétences [${campaignData.utm_campaign}] - Score: ${userScore}/10 - ${formData.firstName} ${formData.lastName}`,
+                        subject: `🎯 Bilan [${campaignData.utm_campaign}] - Score: ${state.userScore}/10 - ${state.formData.firstName} ${state.formData.lastName}`,
                         
-                        // Toutes les données du formulaire et campagne
-                        prenom: formData.firstName,
-                        nom: formData.lastName,
-                        email: formData.email,
-                        telephone: formData.phone,
-                        cpf_utilise: formData.cpfUsage === '3' ? 'Non' : formData.cpfUsage === '2' ? 'Partiellement' : 'Oui',
-                        salarie_5_ans: formData.experience === '3' ? 'Plus de 2 ans' : 'Moins de 2 ans',
-                        motivation: formData.motivation === '3' ? 'Reconversion/Évolution' : 'Faire le point',
-                        score: `${userScore}/10`,
+                        prenom: state.formData.firstName,
+                        nom: state.formData.lastName,
+                        email: state.formData.email,
+                        telephone: state.formData.phone,
+                        cpf_utilise: state.formData.cpfUsage === '3' ? 'Non' : state.formData.cpfUsage === '2' ? 'Partiellement' : 'Oui',
+                        salarie_5_ans: state.formData.experience === '3' ? 'Plus de 2 ans' : 'Moins de 2 ans',
+                        motivation: state.formData.motivation === '3' ? 'Reconversion/Évolution' : 'Faire le point',
+                        score: `${state.userScore}/10`,
                         
-                        // Infos campagne
                         campagne: campaignData.utm_campaign,
                         source: campaignData.utm_source,
                         mot_cle: campaignData.keyword,
                         device: campaignData.device,
                         
-                        // Métadonnées
                         date_soumission: new Date().toLocaleString('fr-FR'),
                         temps_completion: `${elapsedTime} secondes`,
-                        formulaire: 'Bilan Compétences Modified',
+                        formulaire: 'Bilan Compétences GTM',
                         
                         from_name: "Test Éligibilité Bilan",
                         redirect: false
@@ -688,9 +732,8 @@
                 const result = await response.json();
                 
                 if (result.success) {
-                    // Afficher la page de résultats
+                    console.log('✅ Formulaire envoyé - Passage page 2');
                     showResultsPage();
-                    
                 } else {
                     throw new Error(result.message || 'Erreur');
                 }
@@ -699,24 +742,27 @@
                 console.error('Erreur:', error);
                 document.getElementById('errorMessage').style.display = 'block';
                 setTimeout(() => {
-                    isSubmitting = false;
+                    state.isSubmitting = false;
                     submitBtn.innerHTML = originalText;
                     submitBtn.disabled = false;
                 }, 3000);
             }
         }
         
-        // Afficher la page de résultats
+        // Afficher page résultats
         function showResultsPage() {
+            state.currentPage = 2;
             document.getElementById('page1').classList.remove('active');
             document.getElementById('page2').classList.add('active');
+            updateDebug();
             
-            // Personnaliser le message selon le score
+            console.log('📄 PAGE 2 AFFICHÉE - Toujours pas de conversion');
+            
             const resultIcon = document.getElementById('resultIcon');
             const resultTitle = document.getElementById('resultTitle');
             const resultText = document.getElementById('resultText');
             
-            if (userScore >= 7) {
+            if (state.userScore >= 7) {
                 resultIcon.textContent = '🎉';
                 resultTitle.textContent = 'Merci d\'avoir participé à ce test !';
                 resultText.textContent = 'Vous êtes parfaitement éligible pour un bilan de compétences.';
@@ -724,66 +770,79 @@
                 resultIcon.textContent = '😔';
                 resultTitle.textContent = 'Merci d\'avoir participé à ce test !';
                 resultText.textContent = 'Vous n\'êtes pas éligible pour un bilan de compétences pour le moment.';
-                // Masquer la question de contact si non éligible
                 document.querySelector('#page2 .choice-buttons').parentElement.style.display = 'none';
             }
             
-            // Tracking page view
             trackEvent('page_view_results', {
-                user_score: userScore,
-                eligibility: userScore >= 7 ? 'eligible' : 'non-eligible'
+                score: state.userScore,
+                eligible: state.userScore >= 7
             });
         }
         
-        // Gérer le choix de l'utilisateur avec protection contre double-clic
+        // FONCTION CRITIQUE - Gestion du choix OUI/NON
         function handleChoice(choice) {
+            console.log('=================================');
+            console.log(`🎯 CHOIX UTILISATEUR: ${choice}`);
+            console.log('=================================');
+            
             // Protection contre double-clic
-            if (choiceProcessing) {
-                console.log('Choix déjà en cours de traitement');
+            if (state.choiceProcessing || state.conversionSent) {
+                console.log('⚠️ Action déjà en cours ou conversion déjà envoyée');
                 return;
             }
             
-            choiceProcessing = true;
+            state.choiceProcessing = true;
             
-            // Désactiver immédiatement les deux boutons
-            const buttons = document.querySelectorAll('.choice-button');
-            buttons.forEach(btn => {
-                btn.disabled = true;
-                btn.style.opacity = '0.5';
-                btn.style.cursor = 'not-allowed';
-            });
+            // Désactiver les boutons
+            document.getElementById('btnYes').disabled = true;
+            document.getElementById('btnNo').disabled = true;
             
             if (choice === 'yes') {
-                // Afficher la page 3
+                console.log('✅ CHOIX OUI CONFIRMÉ');
+                
+                // Afficher page 3
+                state.currentPage = 3;
                 document.getElementById('page2').classList.remove('active');
                 document.getElementById('page3').classList.add('active');
+                updateDebug();
                 
-                // Déclencher le pixel UNIQUEMENT si pas déjà fait
-                if (!conversionTriggered) {
-                    conversionTriggered = true; // Marquer comme déclenché
+                // ENVOYER L'ÉVÉNEMENT DE CONVERSION UNIQUEMENT ICI
+                if (!state.conversionSent) {
+                    state.conversionSent = true;
                     
-                    // PIXEL DE CONVERSION - SE DÉCLENCHE UNE SEULE FOIS
-                    console.log('Déclenchement pixel conversion - OUI sélectionné');
-                    gtag('event', 'conversion', {
-                        'send_to': 'AW-17340136465',
-                        'value': userScore >= 8 ? 30 : userScore >= 6 ? 20 : 15,
-                        'currency': 'EUR',
-                        'transaction_id': Date.now().toString()
+                    // Calculer la valeur dynamique
+                    const conversionValue = state.userScore >= 8 ? 30 : 
+                                          state.userScore >= 6 ? 20 : 15;
+                    
+                    console.log('🚀 ENVOI ÉVÉNEMENT CONVERSION À GTM');
+                    console.log(`   Event: bilan_competences_lead_generated`);
+                    console.log(`   Valeur: ${conversionValue} EUR`);
+                    console.log(`   Score: ${state.userScore}/10`);
+                    
+                    // ÉVÉNEMENT SPÉCIFIQUE POUR DÉCLENCHER LA CONVERSION
+                    window.dataLayer = window.dataLayer || [];
+                    window.dataLayer.push({
+                        'event': 'bilan_competences_lead_generated',  // Cet événement doit correspondre EXACTEMENT au déclencheur GTM
+                        'conversion_value': conversionValue,
+                        'user_score': state.userScore,
+                        'campaign': campaignData.utm_campaign,
+                        'source': campaignData.utm_source,
+                        'device': campaignData.device
                     });
                     
-                    // Tracking événement
+                    console.log('✅ Événement bilan_competences_lead_generated envoyé à GTM');
+                    
+                    // Tracking supplémentaire (non-conversion)
                     trackEvent('contact_accepted', {
-                        user_score: userScore,
-                        contact_choice: 'yes',
-                        pixel_triggered: true
+                        score: state.userScore,
+                        value: conversionValue
                     });
-                } else {
-                    console.log('Pixel déjà déclenché, ignoré');
+                    
+                    updateDebug();
                 }
                 
-            } else {
-                // PAS DE PIXEL SI NON EST CLIQUÉ
-                console.log('NON sélectionné - Aucun pixel déclenché');
+            } else if (choice === 'no') {
+                console.log('❌ CHOIX NON - AUCUNE conversion');
                 
                 // Message de remerciement
                 document.getElementById('page2').innerHTML = `
@@ -796,20 +855,32 @@
                     </div>
                 `;
                 
-                // Tracking événement
                 trackEvent('contact_declined', {
-                    user_score: userScore,
-                    contact_choice: 'no',
-                    pixel_triggered: false
+                    score: state.userScore
                 });
+                
+                updateDebug();
             }
         }
         
-        // Track page view initial
-        trackEvent('page_view_bilan_modified', {
-            page_title: document.title,
-            page_location: window.location.href
+        // Protection contre navigation
+        window.addEventListener('beforeunload', () => {
+            if (state.currentPage > 1 && !state.conversionSent) {
+                trackEvent('form_abandoned', {
+                    last_page: state.currentPage,
+                    score: state.userScore
+                });
+            }
         });
+        
+        // Tracking initial
+        trackEvent('page_view_form', {
+            campaign: campaignData.utm_campaign,
+            source: campaignData.utm_source
+        });
+        
+        console.log('✅ Script prêt - En attente action utilisateur');
+        console.log('ℹ️ La conversion ne se déclenchera QUE sur le clic OUI');
     </script>
 </body>
 </html>
