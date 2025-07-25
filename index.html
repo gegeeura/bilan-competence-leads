@@ -747,32 +747,52 @@
                         'Content-Type': 'application/json',
                         'Accept': 'application/json'
                     },
-                    body: JSON.stringify({
-                        access_key: WEB3FORMS_ACCESS_KEY,
-                        subject: `🎯 Bilan [${campaignData.utm_campaign}] - Score: ${state.userScore}/10 - ${state.formData.firstName} ${state.formData.lastName}`,
-                        
-                        prenom: state.formData.firstName,
-                        nom: state.formData.lastName,
-                        email: state.formData.email,
-                        telephone: state.formData.phone,
-                        cpf_utilise: state.formData.cpfUsage === '3' ? 'Non' : state.formData.cpfUsage === '2' ? 'Partiellement' : 'Oui',
-                        salarie_5_ans: state.formData.experience === '3' ? 'Plus de 2 ans' : 'Moins de 2 ans',
-                        motivation: state.formData.motivation === '3' ? 'Reconversion/Évolution' : 'Faire le point',
-                        score: `${state.userScore}/10`,
-                        
-                        campagne: campaignData.utm_campaign,
-                        source: campaignData.utm_source,
-                        mot_cle: campaignData.keyword,
-                        device: campaignData.device,
-                        
-                        date_soumission: new Date().toLocaleString('fr-FR'),
-                        temps_completion: `${elapsedTime} secondes`,
-                        formulaire: 'Bilan Compétences GTM',
-                        session_id: state.sessionId,
-                        
-                        from_name: "Test Éligibilité Bilan",
-                        redirect: false
-                    })
+                    // Remplacez la section body: JSON.stringify({ ... }) par ceci :
+
+body: JSON.stringify({
+    access_key: WEB3FORMS_ACCESS_KEY,
+    
+    // Sujet avec nom de campagne en premier
+    subject: `📌 [${campaignData.utm_campaign || 'Direct'}] - Score: ${state.userScore}/10 - ${state.formData.firstName} ${state.formData.lastName}`,
+    
+    // NOUVEAU : Section campagne en premier dans l'email
+    "🎯 CAMPAGNE GOOGLE": campaignData.utm_campaign === 'Campagne-2' ? 'Campagne 2' : 
+                         campaignData.utm_campaign === 'Campagne-3' ? 'Campagne 3' : 
+                         campaignData.utm_campaign || 'Accès Direct (sans campagne)',
+    
+    "📊 SOURCE DÉTAILLÉE": `${campaignData.utm_source} / ${campaignData.utm_medium}`,
+    
+    // Séparateur visuel
+    "_______________": "INFORMATIONS PROSPECT",
+    
+    prenom: state.formData.firstName,
+    nom: state.formData.lastName,
+    email: state.formData.email,
+    telephone: state.formData.phone,
+    cpf_utilise: state.formData.cpfUsage === '3' ? 'Non' : state.formData.cpfUsage === '2' ? 'Partiellement' : 'Oui',
+    salarie_5_ans: state.formData.experience === '3' ? 'Plus de 2 ans' : 'Moins de 2 ans',
+    motivation: state.formData.motivation === '3' ? 'Reconversion/Évolution' : 'Faire le point',
+    score: `${state.userScore}/10`,
+    
+    // Séparateur visuel
+    "_______________": "DONNÉES TRACKING",
+    
+    campagne_origine: campaignData.utm_campaign || 'Direct',
+    source: campaignData.utm_source,
+    medium: campaignData.utm_medium,
+    mot_cle: campaignData.keyword || 'Non défini',
+    device: campaignData.device,
+    gclid: campaignData.gclid || 'Non disponible',
+    
+    date_soumission: new Date().toLocaleString('fr-FR'),
+    temps_completion: `${elapsedTime} secondes`,
+    formulaire: 'Bilan Compétences GTM',
+    session_id: state.sessionId,
+    
+    from_name: "Test Éligibilité Bilan",
+    redirect: false
+})
+              
                 });
                 
                 const result = await response.json();
