@@ -296,9 +296,15 @@
             color: #374151;
         }
         
-        .choice-button:hover {
+        .choice-button:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        
+        .choice-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
         }
         
         /* Étapes finales */
@@ -552,6 +558,8 @@
         let startTime = Date.now();
         let isSubmitting = false;
         let userScore = 0;
+        let conversionTriggered = false; // NOUVEAU: Protection contre doublons de pixel
+        let choiceProcessing = false; // NOUVEAU: Protection contre double-clic
         
         // Récupérer les paramètres UTM et Google Ads
         function getURLParameters() {
@@ -727,28 +735,56 @@
             });
         }
         
-        // Gérer le choix de l'utilisateur
+        // Gérer le choix de l'utilisateur avec protection contre double-clic
         function handleChoice(choice) {
+            // Protection contre double-clic
+            if (choiceProcessing) {
+                console.log('Choix déjà en cours de traitement');
+                return;
+            }
+            
+            choiceProcessing = true;
+            
+            // Désactiver immédiatement les deux boutons
+            const buttons = document.querySelectorAll('.choice-button');
+            buttons.forEach(btn => {
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+                btn.style.cursor = 'not-allowed';
+            });
+            
             if (choice === 'yes') {
                 // Afficher la page 3
                 document.getElementById('page2').classList.remove('active');
                 document.getElementById('page3').classList.add('active');
                 
-                // TRÈS IMPORTANT : PIXEL DE CONVERSION ICI
-                gtag('event', 'conversion', {
-                    'send_to': 'AW-17340136465',
-                    'value': userScore >= 8 ? 30 : userScore >= 6 ? 20 : 15,
-                    'currency': 'EUR',
-                    'transaction_id': Date.now().toString()
-                });
-                
-                // Tracking événement
-                trackEvent('contact_accepted', {
-                    user_score: userScore,
-                    contact_choice: 'yes'
-                });
+                // Déclencher le pixel UNIQUEMENT si pas déjà fait
+                if (!conversionTriggered) {
+                    conversionTriggered = true; // Marquer comme déclenché
+                    
+                    // PIXEL DE CONVERSION - SE DÉCLENCHE UNE SEULE FOIS
+                    console.log('Déclenchement pixel conversion - OUI sélectionné');
+                    gtag('event', 'conversion', {
+                        'send_to': 'AW-17340136465',
+                        'value': userScore >= 8 ? 30 : userScore >= 6 ? 20 : 15,
+                        'currency': 'EUR',
+                        'transaction_id': Date.now().toString()
+                    });
+                    
+                    // Tracking événement
+                    trackEvent('contact_accepted', {
+                        user_score: userScore,
+                        contact_choice: 'yes',
+                        pixel_triggered: true
+                    });
+                } else {
+                    console.log('Pixel déjà déclenché, ignoré');
+                }
                 
             } else {
+                // PAS DE PIXEL SI NON EST CLIQUÉ
+                console.log('NON sélectionné - Aucun pixel déclenché');
+                
                 // Message de remerciement
                 document.getElementById('page2').innerHTML = `
                     <div class="content-wrapper">
@@ -763,7 +799,8 @@
                 // Tracking événement
                 trackEvent('contact_declined', {
                     user_score: userScore,
-                    contact_choice: 'no'
+                    contact_choice: 'no',
+                    pixel_triggered: false
                 });
             }
         }
