@@ -671,9 +671,7 @@
                 utm_term: params.get('utm_term') || '',
                 gclid: params.get('gclid') || '',
                 keyword: params.get('keyword') || params.get('utm_term') || '',
-                device: /mobile|android|iphone/i.test(navigator.userAgent) ? 'mobile' : 'desktop'
-            };
-        }
+              
         
         const campaignData = getURLParameters();
         
@@ -784,7 +782,7 @@ body: JSON.stringify({
     source: campaignData.utm_source,
     medium: campaignData.utm_medium,
     mot_cle: campaignData.keyword || 'Non défini',
-    device: campaignData.device,
+  
     gclid: campaignData.gclid || 'Non disponible',
     
     date_soumission: new Date().toLocaleString('fr-FR'),
